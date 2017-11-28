@@ -12,7 +12,7 @@
 #define EPOCH_LIMIT 1500000
 #define SYNCHRONISATION_THRESHOLD 50
 
-void freeAttackerMemory(NeuralNetwork *attackers, int numAttackers, int k, int n)
+void freeAttackerMemory(struct NeuralNetwork *attackers, int numAttackers, int k, int n)
 {
     for(int i = 0; i < numAttackers; i++)
     {
@@ -34,8 +34,7 @@ int main() {
     int k = 0;
     int n = 0;
     int l = 0;
-    int numAttackers=0;
-    struct NeuralNetwork *neuralNetC;
+    int nAttackers=0;
  
   if(rank==0)
     {
@@ -46,11 +45,11 @@ int main() {
     printf("Enter the value of l:");
     scanf("%d", &l);
     printf("Enter number of Attackers Per Node:");
-    scanf("%d",&n);
+    scanf("%d",&nAttackers);
   
-    neuralNetC = malloc(sizof(struct NeuralNetwork)*nAttackers); 
   
    }
+
 
     //   broadcast the inputs to create attackers and A,B 
     
@@ -58,14 +57,15 @@ int main() {
     MPI_Bcast(&k,1,MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&l,1,MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&nAttackers,1,MPI_INT,0,MPI_COMM_WORLD);
+    struct NeuralNetwork* neuralNetC = malloc((sizeof(struct NeuralNetwork))*nAttackers); 
 
     struct NeuralNetwork neuralNetA = constructNeuralNetwork(k, n, l);
     struct NeuralNetwork neuralNetB = constructNeuralNetwork(k, n, l); 
     
-    
     srand(time(NULL)+rank);  // create new seed for different networks 
 
-   
+    neuralNetC[rank] = constructNeuralNetwork(k,n,l); 
+
     //create a nAttackers at each node     
     
     neuralNetC[rank] = constructNeuralNetwork(k, n, l);
@@ -77,7 +77,7 @@ int main() {
     printf("\n=====================================\n");
     printNetworkWeights(neuralNetB, k, n);
     printf("\n=====================================\n");
-    printNetworkWeights(neuralNetC, k, n);
+  
     printf("\n=====================================\n");
     printNetworkWeights(neuralNetC[rank], k, n);
 
@@ -93,7 +93,7 @@ int main() {
    
    // runKKKProtocol(struct NeuralNetwork neuralNetA, struct NeuralNetwork neuralNetB, int** inputs, int k, int n, int l, int syncThreshold, int epochLimit)
      //bool status = runKKKProtocol(neuralNetA, neuralNetB, inputs, k, n, l,SYNCHRONISATION_THRESHOLD, EPOCH_LIMIT);
-     bool status = runGeometricAttackKKKProtocol(neuralNetA, neuralNetB, neuralNetC, inputs, k, n, l, SYNCHRONISATION_THRESHOLD, EPOCH_LIMIT, &epoch);
+     bool status = runGeometricAttackKKKProtocol(neuralNetA, neuralNetB, neuralNetC[rank], inputs, k, n, l, SYNCHRONISATION_THRESHOLD, EPOCH_LIMIT, &epoch);
 
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -115,10 +115,11 @@ int main() {
 
     freeMemoryForNetwork(neuralNetA, k, n);
     freeMemoryForNetwork(neuralNetB, k, n);
-    freeMemoryForAttackers(*neuralNetC, k, n);
-    free(neuralNetC);
+    freeMemoryForNetwork(neuralNetC[rank],k, n);
     free(inputs);
-    return 0;
+
+MPI_Finalize;
+return 0;
 }
 
 

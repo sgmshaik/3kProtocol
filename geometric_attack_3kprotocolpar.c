@@ -10,15 +10,9 @@
 #include "3kprotocol.h"
 #include <mpi.h>
 #define EPOCH_LIMIT 1500000
-#define SYNCHRONISATION_THRESHOLD 50
+#define SYNCHRONISATION_THRESHOLD 500
 
-void freeAttackerMemory(struct NeuralNetwork *attackers, int numAttackers, int k, int n)
-{
-    for(int i = 0; i < numAttackers; i++)
-    {
-    freeMemoryForNetwork(attackers[i], k, n);
-    }
-}
+
 
 
 int main() {
@@ -59,28 +53,66 @@ int main() {
     MPI_Bcast(&nAttackers,1,MPI_INT,0,MPI_COMM_WORLD);
     struct NeuralNetwork* neuralNetC = malloc((sizeof(struct NeuralNetwork))*nAttackers); 
 
+          
+
     struct NeuralNetwork neuralNetA = constructNeuralNetwork(k, n, l);
+       
+
     struct NeuralNetwork neuralNetB = constructNeuralNetwork(k, n, l); 
+                
+
+
+    // create set of attackers on each on each node 
+   for(int i = 0; i<nAttackers; i++ )
+   {
+    srand(time(NULL)+rank+i);  // create new seed for different networks 
+        
     
-    srand(time(NULL)+rank);  // create new seed for different networks 
 
-    neuralNetC[rank] = constructNeuralNetwork(k,n,l); 
-
+    neuralNetC[i] = constructNeuralNetwork(k,n,l); 
+  
+   }
     //create a nAttackers at each node     
     
-    neuralNetC[rank] = constructNeuralNetwork(k, n, l);
+
+    
 
 
     int** inputs = getRandomInputs(k, n);
-    printf("\n==============BEFORE PROTOCOL RUN=====================RANK[%d]===\n",rank);
-    printNetworkWeights(neuralNetA, k, n);
-    printf("\n=====================================\n");
-    printNetworkWeights(neuralNetB, k, n);
-    printf("\n=====================================\n");
-  
-    printf("\n=====================================\n");
-    printNetworkWeights(neuralNetC[rank], k, n);
 
+    for(int i = 0;i<comm_sz;i++)
+    {
+MPI_Barrier(MPI_COMM_WORLD);
+
+if(rank==i){
+    printf("\n==============BEFORE PROTOCOL RUN=====================RANK[%d]===\n",rank);      
+
+      printf("\n==============BEFORE PROTOCOL RUN A=====================RANK[%d]===\n",rank);      
+
+    printNetworkWeights(neuralNetA, k, n);
+    
+    printf("\n=====================================\n");
+    
+     printf("\n==============BEFORE PROTOCOL RUN B =====================RANK[%d]===\n",rank);       
+
+    printNetworkWeights(neuralNetB, k, n);
+    
+    printf("\n=====================================\n");
+    
+    printf("\n=====================================\n");
+    
+    for(int i = 0; i < nAttackers; i++)
+    {
+    
+    printf("\n========================Attacker%d===========Rank%d\n",i,rank);
+       
+
+    printNetworkWeights(neuralNetC[i], k, n);
+       
+
+    printf("\n========================Attacker%d===========Rank%d\n",i,rank);
+    
+    }
      /*
      * To run the KKK Protocol normally (without any attacks), uncomment the call to function runKKKProtocol(...) below, 
      * and comment out the call to function runGeometricAttackKKKProtocol(...) which follows.  To run the attack in 'offline'
@@ -93,32 +125,93 @@ int main() {
    
    // runKKKProtocol(struct NeuralNetwork neuralNetA, struct NeuralNetwork neuralNetB, int** inputs, int k, int n, int l, int syncThreshold, int epochLimit)
      //bool status = runKKKProtocol(neuralNetA, neuralNetB, inputs, k, n, l,SYNCHRONISATION_THRESHOLD, EPOCH_LIMIT);
-     bool status = runGeometricAttackKKKProtocol(neuralNetA, neuralNetB, neuralNetC[rank], inputs, k, n, l, SYNCHRONISATION_THRESHOLD, EPOCH_LIMIT, &epoch);
+     
+     for(int i = 0; i<nAttackers; i++)
+     {
+     bool status = runGeometricAttackKKKProtocol(neuralNetA, neuralNetB, neuralNetC[i], inputs, k, n, l, SYNCHRONISATION_THRESHOLD, EPOCH_LIMIT, &epoch);
 
 
-    MPI_Barrier(MPI_COMM_WORLD);
+    
     printf("\n==============AFTER PROTOCOL RUN====================RANK[%d]===\n",rank);
     if (status == true) {
+        
         printf("The networks are now synchronised after %d epochs!\n", epoch);
-        printNetworkWeights(neuralNetA, k, n);
-        printf("\n=====================================\n");
-        printNetworkWeights(neuralNetB, k, n);
-        printf("\n=====================================\n");
-        printNetworkWeights(neuralNetC[rank], k, n);
-        printf("\n=====================================\n");
-    } else {
-        printNetworkWeights(neuralNetA, k, n);
-        printNetworkWeights(neuralNetB, k, n);
-        printNetworkWeights(neuralNetC[rank], k, n);
-        printf("Networks are unsynchronised after %d epochs.", EPOCH_LIMIT);
-    }
+        
+          printf("\n==============After PROTOCOL RUN A=====================RANK[%d]===\n",rank);       
 
-    freeMemoryForNetwork(neuralNetA, k, n);
+        printNetworkWeights(neuralNetA, k, n);
+        
+        printf("\n=====================================\n");
+        
+        printf("\n==============After PROTOCOL RUN B=====================RANK[%d]===\n",rank);       
+
+        printNetworkWeights(neuralNetB, k, n);
+        
+        printf("\n=====================================\n");
+        
+       
+       // for(int i = 0;i<nAttackers;i++)
+        //{       
+            
+    printf("\n========================Attacker%d AFTER Run===========Rank%d\n",i,rank);
+            
+
+        printNetworkWeights(neuralNetC[i], k, n);
+               
+
+    printf("\n========================Attacker%d===========Rank%d\n",i,rank);
+
+        //}
+
+        
+
+        printf("\n=====================================\n");
+          
+
+    } else {
+       
+                  printf("\n==============After PROTOCOL RUN A fail=====================RANK[%d]===\n",rank);       
+
+        printNetworkWeights(neuralNetA, k, n);
+            
+                  printf("\n==============After PROTOCOL RUN B fail=====================RANK[%d]===\n",rank);       
+
+        printNetworkWeights(neuralNetB, k, n);
+       
+       // for(int i = 0;i<nAttackers;i++)
+        //{       
+            
+        printf("\n==============After PROTOCOL RUN C fail  attacl[%d]=====================RANK[%d]===\n",i,rank);       
+
+        printNetworkWeights(neuralNetC[i], k, n);
+                   
+
+        //}
+       
+
+        printf("Networks are unsynchronised after %d epochs.", EPOCH_LIMIT);
+       
+
+    }
+     
+}
+freeMemoryForNetwork(neuralNetA, k, n);
     freeMemoryForNetwork(neuralNetB, k, n);
-    freeMemoryForNetwork(neuralNetC[rank],k, n);
+    
+    for(int i = 0; i < nAttackers; i++)
+    {
+    freeMemoryForNetwork(neuralNetC[i],k, n);
+    } 
     free(inputs);
 
+}
+    
+    }
+
+
 MPI_Finalize;
+
+MPI_Barrier(MPI_COMM_WORLD);
 return 0;
 }
 

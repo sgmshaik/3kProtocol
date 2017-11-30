@@ -209,9 +209,8 @@ freeMemoryForNetwork(neuralNetA, k, n);
     }
 
 
-MPI_Finalize;
+MPI_Finalize();
 
-MPI_Barrier(MPI_COMM_WORLD);
 return 0;
 }
 

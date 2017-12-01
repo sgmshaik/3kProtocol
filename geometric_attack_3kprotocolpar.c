@@ -34,7 +34,7 @@ int main() {
     int n = 0;
     int l = 0;
     int nAttackers=0;
- 
+  MPI_Barrier(MPI_COMM_WORLD);
   if(rank==0)
     {
     printf("Enter the value of k:");
@@ -49,7 +49,8 @@ int main() {
     printf("Enter number of Attackers Per Node:");
     fflush(stdout);
     scanf("%d",&nAttackers); 
-   }
+ 	fflush(stdout);   
+	}
 
  MPI_Barrier(MPI_COMM_WORLD);
 

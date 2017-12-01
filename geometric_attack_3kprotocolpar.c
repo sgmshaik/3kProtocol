@@ -37,6 +37,7 @@ int main() {
   MPI_Barrier(MPI_COMM_WORLD);
   if(rank==0)
     {
+fflush(stdout);
     printf("Enter the value of k:");
    fflush(stdout);
    scanf("%d", &k);

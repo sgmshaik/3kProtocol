@@ -94,7 +94,7 @@ fflush(stdout);
 
     for(int i = 0;i<comm_sz;i++)
     {
-
+MPI_Barrier(MPI_COMM_WORLD);
 if(rank==i){
     printf("\n==============BEFORE PROTOCOL RUN=====================RANK[%d]===\n",rank);      
 

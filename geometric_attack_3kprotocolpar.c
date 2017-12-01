@@ -51,7 +51,7 @@ int main() {
     scanf("%d",&nAttackers); 
    }
 
- MPI_Barrier();
+ MPI_Barrier(MPI_COMM_WORLD);
 
     //   broadcast the inputs to create attackers and A,B 
     
@@ -75,7 +75,7 @@ int main() {
    {
    
    // need to fix random number generator
-    srand(time(NULL)+rank+i);  // create new seed for different networks 
+    srand((unsigned)time(NULL)+rank+i);  // create new seed for different networks 
         
     
 

@@ -77,7 +77,7 @@ fflush(stdout);
    {
    
    // need to fix random number generator
-    //srand((unsigned)time(NULL)+rank+i);  // create new seed for different networks 
+    srand(rand()+rank+i);  // create new seed for different networks 
         
     
 
@@ -94,7 +94,6 @@ fflush(stdout);
 
     for(int i = 0;i<comm_sz;i++)
     {
-MPI_Barrier(MPI_COMM_WORLD);
 
 if(rank==i){
     printf("\n==============BEFORE PROTOCOL RUN=====================RANK[%d]===\n",rank);      

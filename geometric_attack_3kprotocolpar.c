@@ -75,7 +75,7 @@ int main() {
    {
    
    // need to fix random number generator
-    srand((unsigned)time(NULL)+rank+i);  // create new seed for different networks 
+    //srand((unsigned)time(NULL)+rank+i);  // create new seed for different networks 
         
     
 

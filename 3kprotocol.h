@@ -127,7 +127,7 @@ bool runKKKProtocol(struct NeuralNetwork neuralNetA, struct NeuralNetwork neural
 bool runGeometricAttackKKKProtocol(struct NeuralNetwork neuralNetA, struct NeuralNetwork neuralNetB, struct NeuralNetwork attackerNet, int** inputs, int k, int n, int l, int syncThreshold, int epochLimit, int* epochFinal) {
     int s = 0;
     int epoch = 0;
-    
+    // inside the while check boolean broadcast between processors 
     while ((s < syncThreshold) && (epoch < epochLimit)) {
         int outputA = getNetworkOutput(neuralNetA, inputs, k, n);
         int outputB = getNetworkOutput(neuralNetB, inputs, k, n);

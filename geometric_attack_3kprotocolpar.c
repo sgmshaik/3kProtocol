@@ -7,6 +7,9 @@
  * Copyright 2016 Maduka Attamah
  */
 
+
+//tasks i need to stop a single attacker is successfull 
+
 #include "3kprotocol.h"
 #include <mpi.h>
 #define EPOCH_LIMIT 1500000
@@ -17,11 +20,13 @@
 
 int main() {
     
-    
+
+    MPI_Init(NULL,NULL);
+
+
     int comm_sz;
     int rank ;    
    
-    MPI_Init(NULL,NULL);
     MPI_Comm_size(MPI_COMM_WORLD,&comm_sz);
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 
@@ -33,17 +38,20 @@ int main() {
   if(rank==0)
     {
     printf("Enter the value of k:");
-    scanf("%d", &k);
+   fflush(stdout);
+   scanf("%d", &k);
     printf("Enter the value of n:");
+    fflush(stdout) ;
     scanf("%d", &n);
     printf("Enter the value of l:");
+    fflush(stdout);
     scanf("%d", &l);
     printf("Enter number of Attackers Per Node:");
-    scanf("%d",&nAttackers);
-  
-  
+    fflush(stdout);
+    scanf("%d",&nAttackers); 
    }
 
+ MPI_Barrier();
 
     //   broadcast the inputs to create attackers and A,B 
     
@@ -65,6 +73,8 @@ int main() {
     // create set of attackers on each on each node 
    for(int i = 0; i<nAttackers; i++ )
    {
+   
+   // need to fix random number generator
     srand(time(NULL)+rank+i);  // create new seed for different networks 
         
     
@@ -113,6 +123,7 @@ if(rank==i){
     printf("\n========================Attacker%d===========Rank%d\n",i,rank);
     
     }
+     
      /*
      * To run the KKK Protocol normally (without any attacks), uncomment the call to function runKKKProtocol(...) below, 
      * and comment out the call to function runGeometricAttackKKKProtocol(...) which follows.  To run the attack in 'offline'
@@ -128,6 +139,11 @@ if(rank==i){
      
      for(int i = 0; i<nAttackers; i++)
      {
+    
+    
+    // need to check bool condition for each attacker once one attacker successful then stop .
+
+
      bool status = runGeometricAttackKKKProtocol(neuralNetA, neuralNetB, neuralNetC[i], inputs, k, n, l, SYNCHRONISATION_THRESHOLD, EPOCH_LIMIT, &epoch);
 
 

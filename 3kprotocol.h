@@ -9,9 +9,9 @@
  * Copyright 2016-2017 Maduka Attamah
  */
 
+#include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 
 /* Struct type for the neural network */

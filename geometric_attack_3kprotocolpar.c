@@ -30,6 +30,7 @@ int main() {
     MPI_Comm_size(MPI_COMM_WORLD,&comm_sz);
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 
+    srand(time(NULL)+rank);  // create new seed for different networks 
     int k = 0;
     int n = 0;
     int l = 0;
@@ -77,7 +78,6 @@ fflush(stdout);
    {
    
    // need to fix random number generator
-    srand(rand()+rank+i);  // create new seed for different networks 
         
     
 

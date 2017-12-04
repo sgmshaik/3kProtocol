@@ -35,6 +35,7 @@ int main() {
     int n = 0;
     int l = 0;
     int nAttackers=0;
+ 
   MPI_Barrier(MPI_COMM_WORLD);
   if(rank==0)
     {
@@ -45,6 +46,8 @@ fflush(stdout);
     printf("Enter the value of n:");
     fflush(stdout) ;
     scanf("%d", &n);
+    fflush(stdout) ;
+
     printf("Enter the value of l:");
     fflush(stdout);
     scanf("%d", &l);

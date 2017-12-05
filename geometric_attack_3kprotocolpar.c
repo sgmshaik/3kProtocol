@@ -13,7 +13,7 @@
 #include "3kprotocol.h"
 #include <mpi.h>
 #include<time.h>
-#define EPOCH_LIMIT 1500000
+#define EPOCH_LIMIT 2000000
 #define SYNCHRONISATION_THRESHOLD 50
 
 
@@ -31,7 +31,6 @@ int main() {
    
     MPI_Comm_size(MPI_COMM_WORLD,&comm_sz);
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-    srand(rank + time(NULL));
 
 
       // create new seed for different networks 
@@ -74,90 +73,19 @@ fflush(stdout);
     struct NeuralNetwork neuralNetA;
     struct NeuralNetwork neuralNetB;
     
-   
-
- int** inputs;  
- 
- if(rank==0)
- { 
-   
-   
-
-   inputs = getRandomInputs(k, n);
+        neuralNetA = constructNeuralNetwork(k, n, l);
 
 
-    MPI_Bcast(&(inputs[0][0]),k*n,MPI_INT,0,MPI_COMM_WORLD); 
-
-    neuralNetA = constructNeuralNetwork(k, n, l);
-
-    
-    
-
-    MPI_Bcast(&(neuralNetA.weights[0][0]),k*n,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&(neuralNetA.hiddenLayerOutputs[0]),n,MPI_INT,0,MPI_COMM_WORLD);
+ int** inputs = getRandomInputs(k, n);
 
 
-    
-
-
-
+srand(100);
+        
         neuralNetB = constructNeuralNetwork(k, n, l); 
 
-        MPI_Bcast(&(neuralNetB.weights[0][0]),k*n,MPI_INT,0,MPI_COMM_WORLD);
-
-        MPI_Bcast(&(neuralNetB.hiddenLayerOutputs[0]),n,MPI_INT,0,MPI_COMM_WORLD);
+ 
 
 
-
-
-
-
- }else if(rank!=0)
- {
-     inputs = malloc(sizeof (int*)*k);
-        for (int i = 0; i < k; i++) {
-        inputs[i] = malloc(sizeof (int) * n);
-
-    }
-     
-
-    neuralNetA.weights = malloc(sizeof (int*) * (k));
-    neuralNetB.weights = malloc(sizeof (int*) * (k));
-    
-    for (int i = 0; i < k; i++) {
-   neuralNetA.weights[i] = malloc(sizeof (int) * n);
-   neuralNetB.weights[i] = malloc(sizeof (int) *n);
-
-    }
-   
-    neuralNetA.hiddenLayerOutputs = malloc(sizeof (int)*k);
-    neuralNetB.hiddenLayerOutputs = malloc(sizeof (int)*k);
-
-
-   MPI_Bcast(&(inputs[0][0]),k*n,MPI_INT,0,MPI_COMM_WORLD); 
-  
-
-
-   MPI_Bcast(&(neuralNetA.weights[0][0]),k*n,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&(neuralNetA.hiddenLayerOutputs[0]),n,MPI_INT,0,MPI_COMM_WORLD);
-
-      
-    MPI_Bcast(&(neuralNetB.weights[0][0]),k*n,MPI_INT,0,MPI_COMM_WORLD);
-
-    MPI_Bcast(&(neuralNetB.hiddenLayerOutputs[0]),n,MPI_INT,0,MPI_COMM_WORLD);
-
-
-   
- }
-
-
-
-
-   
-
-
-
-             
 
 
     // create set of attackers on each on each node 
@@ -166,6 +94,7 @@ fflush(stdout);
    
    // need to fix random number generator
         
+    srand(rank + i + time(NULL) );            
 
 
     neuralNetC[i] = constructNeuralNetwork(k,n,l); 
@@ -222,7 +151,7 @@ fflush(stdout);
     // need to check bool condition for each attacker once one attacker successful then stop .
 
      int epoch = 0;
-
+     srand(time(NULL));
      bool status = runGeometricAttackKKKProtocol(neuralNetA, neuralNetB, neuralNetC[i], inputs, k, n, l, SYNCHRONISATION_THRESHOLD, EPOCH_LIMIT, &epoch);
     
     

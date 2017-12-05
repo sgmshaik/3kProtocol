@@ -23,7 +23,7 @@ struct NeuralNetwork {
 
 /* Custom boolean type */
 typedef enum {
-    true, false
+    false, true
 } bool;
 
 /* Function declarations */
@@ -144,7 +144,7 @@ bool runGeometricAttackKKKProtocol(struct NeuralNetwork neuralNetA, struct Neura
             
         } else if ((outputA == outputB) && (outputA != outputC)) {
             //Reset the synchronisation count - there was no synchronisation or sychronisation broke down in the round.
-            s = 0;
+            s = s+1;
             
             // Get the hidden neuron in C (attackerNet) for which the sum of its weights * inputs is minimised.
             int kthHidden = getMinInputSumNeuron(attackerNet, inputs, k, n);
@@ -178,7 +178,21 @@ bool runGeometricAttackKKKProtocol(struct NeuralNetwork neuralNetA, struct Neura
     *epochFinal = epoch;
     
     //Did the above while loop stop because the synchronisation threshold was reached?
-    if (s == syncThreshold) {
+   bool attackout= true;
+   for(int i = 0; i < k ; i++ )
+   {
+       for(int j = 0; j<n; j++)
+       {
+           if(neuralNetA.weights[i][j]!=attackerNet.weights[i][j] )
+           {
+           attackout = false;
+           break;
+           }
+       }
+       if(attackout==false)
+       break;
+   }
+    if (s == syncThreshold && attackout==true ) {
         return true;  // We have succesfully synchronised the network. The weights were the same for syncThreshold number of rounds!
     } 
     
@@ -390,6 +404,7 @@ void initWeights(int** weights, int k, int n, int l) {
     for (int i = 0; i < k; i++) {
         for (int j = 0; j < n; j++) {
             weights[i][j] = weightRand(l);
+  //   printf("Weights [ %d  ] \n ",weights[i][j]);
         }
     }
 }

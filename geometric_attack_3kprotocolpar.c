@@ -110,7 +110,8 @@ srand(100);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-sleep(rank*0.5);
+    sleep(rank*0.5);
+   
     printf("\n==============BEFORE PROTOCOL RUN=====================RANK[%d]===\n",rank);      
 
     printf("\n==============BEFORE PROTOCOL RUN A=====================RANK[%d]===\n",rank);      
@@ -155,6 +156,7 @@ sleep(rank*0.5);
      int epoch = 0;
    
      srand(time(NULL));
+// each mpiprocess has the same seed for the round inputs 
 
      struct NeuralNetwork AbeforeAttack = cloneNeuralNetwork(k,n, neuralNetA);
      struct NeuralNetwork BbeforeAttack = cloneNeuralNetwork(k,n, neuralNetB);

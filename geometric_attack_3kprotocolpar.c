@@ -9,11 +9,12 @@
 
 
 //tasks i need to stop a single attacker is successfull 
-
+#include<stdlib.h>
 #include "3kprotocol.h"
 #include <mpi.h>
+#include<time.h>
 #define EPOCH_LIMIT 1500000
-#define SYNCHRONISATION_THRESHOLD 500
+#define SYNCHRONISATION_THRESHOLD 50
 
 
 
@@ -24,19 +25,23 @@ int main() {
     MPI_Init(NULL,NULL);
 
 
+
     int comm_sz;
     int rank ;    
    
     MPI_Comm_size(MPI_COMM_WORLD,&comm_sz);
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    srand(rank + time(NULL));
 
-    srand(time(NULL)+rank);  // create new seed for different networks 
+
+      // create new seed for different networks 
+    
     int k = 0;
     int n = 0;
     int l = 0;
     int nAttackers=0;
  
-  MPI_Barrier(MPI_COMM_WORLD);
+  
   if(rank==0)
     {
 fflush(stdout);
@@ -54,10 +59,8 @@ fflush(stdout);
     printf("Enter number of Attackers Per Node:");
     fflush(stdout);
     scanf("%d",&nAttackers); 
- 	fflush(stdout);   
 	}
 
- MPI_Barrier(MPI_COMM_WORLD);
 
     //   broadcast the inputs to create attackers and A,B 
     
@@ -66,14 +69,53 @@ fflush(stdout);
     MPI_Bcast(&l,1,MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&nAttackers,1,MPI_INT,0,MPI_COMM_WORLD);
     struct NeuralNetwork* neuralNetC = malloc((sizeof(struct NeuralNetwork))*nAttackers); 
+ 
+    struct NeuralNetwork neuralNetA;
+    struct NeuralNetwork neuralNetB;
+    int outputA;
+    int outputB;         
+ 
 
-          
+ int** inputs;  
+ 
+ if(rank==0)
+ { 
+   inputs = getRandomInputs(k, n);
+         MPI_Bcast(&(inputs[0][0]),k*n,MPI_INT,0,MPI_COMM_WORLD); 
 
-    struct NeuralNetwork neuralNetA = constructNeuralNetwork(k, n, l);
-       
 
-    struct NeuralNetwork neuralNetB = constructNeuralNetwork(k, n, l); 
-                
+ }else if(rank!=0)
+ {
+     inputs = malloc(sizeof (int*)*k);
+        for (int i = 0; i < k; i++) {
+        inputs[i] = malloc(sizeof (int) * n);
+
+    }
+        MPI_Bcast(&(inputs[0][0]),k*n,MPI_INT,0,MPI_COMM_WORLD); 
+
+ }
+
+
+
+if(rank==0)
+{
+    neuralNetA = constructNeuralNetwork(k, n, l);
+
+    outputA =  getNetworkOutput(neuralNetA,inputs,k,n);
+
+    MPI_Bcast(outputA,1,MPI_INT,0,MPI_COMM_WORLD); 
+
+
+
+    neuralNetB = constructNeuralNetwork(k, n, l); 
+
+    outputB = MPI_Bcast(outputB,k*n,MPI_INT,0,MPI_COMM_WORLD); 
+
+
+}
+
+
+             
 
 
     // create set of attackers on each on each node 
@@ -82,26 +124,22 @@ fflush(stdout);
    
    // need to fix random number generator
         
-    
+
 
     neuralNetC[i] = constructNeuralNetwork(k,n,l); 
   
    }
     //create a nAttackers at each node     
-    
 
-    
+ 
+
+/*
+    MPI_Barrier(MPI_COMM_WORLD);
 
 
-    int** inputs = getRandomInputs(k, n);
-
-    for(int i = 0;i<comm_sz;i++)
-    {
-MPI_Barrier(MPI_COMM_WORLD);
-if(rank==i){
     printf("\n==============BEFORE PROTOCOL RUN=====================RANK[%d]===\n",rank);      
 
-      printf("\n==============BEFORE PROTOCOL RUN A=====================RANK[%d]===\n",rank);      
+    printf("\n==============BEFORE PROTOCOL RUN A=====================RANK[%d]===\n",rank);      
 
     printNetworkWeights(neuralNetA, k, n);
     
@@ -128,31 +166,34 @@ if(rank==i){
     
     }
      
-     /*
-     * To run the KKK Protocol normally (without any attacks), uncomment the call to function runKKKProtocol(...) below, 
-     * and comment out the call to function runGeometricAttackKKKProtocol(...) which follows.  To run the attack in 'offline'
-     * mode the call to runGeometricAttackKKKProtocol(...) can come after the runKKKProtocol(...), but then you ought to modify 
-     * (or create another version of) the function runGeometricAttackKKKProtocol(...) to not update the weights of
-     * neuralNetA and neuralNetB during the attack.
-     */
-
-    int epoch = 0;
-   
-   // runKKKProtocol(struct NeuralNetwork neuralNetA, struct NeuralNetwork neuralNetB, int** inputs, int k, int n, int l, int syncThreshold, int epochLimit)
-     //bool status = runKKKProtocol(neuralNetA, neuralNetB, inputs, k, n, l,SYNCHRONISATION_THRESHOLD, EPOCH_LIMIT);
+   */
      
+     double success_count = 0;
+
+     
+
+
      for(int i = 0; i<nAttackers; i++)
      {
     
     
     // need to check bool condition for each attacker once one attacker successful then stop .
 
+     int epoch = 0;
 
      bool status = runGeometricAttackKKKProtocol(neuralNetA, neuralNetB, neuralNetC[i], inputs, k, n, l, SYNCHRONISATION_THRESHOLD, EPOCH_LIMIT, &epoch);
-
-
     
+    
+
+    if (status == true)
+    {
+        success_count = success_count +1.0;
+        printf("local success [%lf ] \n", success_count);
+    }
+     
+     /*
     printf("\n==============AFTER PROTOCOL RUN====================RANK[%d]===\n",rank);
+    
     if (status == true) {
         
         printf("The networks are now synchronised after %d epochs!\n", epoch);
@@ -213,20 +254,40 @@ if(rank==i){
        
 
     }
+    MPI_Barrier(MPI_COMM_WORLD);
      
-}
-freeMemoryForNetwork(neuralNetA, k, n);
+*/
+     }
+
+          double global_count = 0 ;
+
+   
+     MPI_Reduce(&success_count,&global_count,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD ) ;
+   
+       //  MPI_Reduce(&success_count,&global_count,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+       
+       if (rank==0)
+       {
+           
+       printf("The Success rate  =  [%lf]\n", 100.*global_count/(double)(nAttackers*comm_sz));
+       fflush(stdout);
+
+     }
+
+
+    freeMemoryForNetwork(neuralNetA, k, n);
     freeMemoryForNetwork(neuralNetB, k, n);
     
     for(int i = 0; i < nAttackers; i++)
     {
     freeMemoryForNetwork(neuralNetC[i],k, n);
     } 
+    
     free(inputs);
 
-}
+
     
-    }
+    
 
 
 MPI_Finalize();

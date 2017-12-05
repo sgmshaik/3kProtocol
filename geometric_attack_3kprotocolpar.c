@@ -68,20 +68,48 @@ fflush(stdout);
     MPI_Bcast(&k,1,MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&l,1,MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&nAttackers,1,MPI_INT,0,MPI_COMM_WORLD);
-    struct NeuralNetwork* neuralNetC = malloc((sizeof(struct NeuralNetwork))*nAttackers); 
+ 
+   struct NeuralNetwork* neuralNetC = malloc((sizeof(struct NeuralNetwork))*nAttackers); 
  
     struct NeuralNetwork neuralNetA;
     struct NeuralNetwork neuralNetB;
-    int outputA;
-    int outputB;         
- 
+    
+   
 
  int** inputs;  
  
  if(rank==0)
  { 
+   
+   
+
    inputs = getRandomInputs(k, n);
-         MPI_Bcast(&(inputs[0][0]),k*n,MPI_INT,0,MPI_COMM_WORLD); 
+
+
+    MPI_Bcast(&(inputs[0][0]),k*n,MPI_INT,0,MPI_COMM_WORLD); 
+
+    neuralNetA = constructNeuralNetwork(k, n, l);
+
+    
+    
+
+    MPI_Bcast(&(neuralNetA.weights[0][0]),k*n,MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&(neuralNetA.hiddenLayerOutputs[0]),n,MPI_INT,0,MPI_COMM_WORLD);
+
+
+    
+
+
+
+        neuralNetB = constructNeuralNetwork(k, n, l); 
+
+        MPI_Bcast(&(neuralNetB.weights[0][0]),k*n,MPI_INT,0,MPI_COMM_WORLD);
+
+        MPI_Bcast(&(neuralNetB.hiddenLayerOutputs[0]),n,MPI_INT,0,MPI_COMM_WORLD);
+
+
+
+
 
 
  }else if(rank!=0)
@@ -91,28 +119,42 @@ fflush(stdout);
         inputs[i] = malloc(sizeof (int) * n);
 
     }
-        MPI_Bcast(&(inputs[0][0]),k*n,MPI_INT,0,MPI_COMM_WORLD); 
+     
 
+    neuralNetA.weights = malloc(sizeof (int*) * (k));
+    neuralNetB.weights = malloc(sizeof (int*) * (k));
+    
+    for (int i = 0; i < k; i++) {
+   neuralNetA.weights[i] = malloc(sizeof (int) * n);
+   neuralNetB.weights[i] = malloc(sizeof (int) *n);
+
+    }
+   
+    neuralNetA.hiddenLayerOutputs = malloc(sizeof (int)*k);
+    neuralNetB.hiddenLayerOutputs = malloc(sizeof (int)*k);
+
+
+   MPI_Bcast(&(inputs[0][0]),k*n,MPI_INT,0,MPI_COMM_WORLD); 
+  
+
+
+   MPI_Bcast(&(neuralNetA.weights[0][0]),k*n,MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&(neuralNetA.hiddenLayerOutputs[0]),n,MPI_INT,0,MPI_COMM_WORLD);
+
+      
+    MPI_Bcast(&(neuralNetB.weights[0][0]),k*n,MPI_INT,0,MPI_COMM_WORLD);
+
+    MPI_Bcast(&(neuralNetB.hiddenLayerOutputs[0]),n,MPI_INT,0,MPI_COMM_WORLD);
+
+
+   
  }
 
 
 
-if(rank==0)
-{
-    neuralNetA = constructNeuralNetwork(k, n, l);
 
-    outputA =  getNetworkOutput(neuralNetA,inputs,k,n);
+   
 
-    MPI_Bcast(outputA,1,MPI_INT,0,MPI_COMM_WORLD); 
-
-
-
-    neuralNetB = constructNeuralNetwork(k, n, l); 
-
-    outputB = MPI_Bcast(outputB,k*n,MPI_INT,0,MPI_COMM_WORLD); 
-
-
-}
 
 
              
@@ -133,7 +175,7 @@ if(rank==0)
 
  
 
-/*
+
     MPI_Barrier(MPI_COMM_WORLD);
 
 
@@ -166,7 +208,7 @@ if(rank==0)
     
     }
      
-   */
+   
      
      double success_count = 0;
 
@@ -191,7 +233,7 @@ if(rank==0)
         printf("local success [%lf ] \n", success_count);
     }
      
-     /*
+     
     printf("\n==============AFTER PROTOCOL RUN====================RANK[%d]===\n",rank);
     
     if (status == true) {
@@ -211,8 +253,8 @@ if(rank==0)
         printf("\n=====================================\n");
         
        
-       // for(int i = 0;i<nAttackers;i++)
-        //{       
+        for(int i = 0;i<nAttackers;i++)
+        {       
             
     printf("\n========================Attacker%d AFTER Run===========Rank%d\n",i,rank);
             
@@ -222,7 +264,7 @@ if(rank==0)
 
     printf("\n========================Attacker%d===========Rank%d\n",i,rank);
 
-        //}
+        }
 
         
 
@@ -239,15 +281,15 @@ if(rank==0)
 
         printNetworkWeights(neuralNetB, k, n);
        
-       // for(int i = 0;i<nAttackers;i++)
-        //{       
+        for(int i = 0;i<nAttackers;i++)
+        {       
             
         printf("\n==============After PROTOCOL RUN C fail  attacl[%d]=====================RANK[%d]===\n",i,rank);       
 
         printNetworkWeights(neuralNetC[i], k, n);
                    
 
-        //}
+        }
        
 
         printf("Networks are unsynchronised after %d epochs.", EPOCH_LIMIT);
@@ -256,7 +298,7 @@ if(rank==0)
     }
     MPI_Barrier(MPI_COMM_WORLD);
      
-*/
+
      }
 
           double global_count = 0 ;

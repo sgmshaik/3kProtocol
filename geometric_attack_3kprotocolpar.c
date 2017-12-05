@@ -83,12 +83,11 @@ fflush(stdout);
 
 
 // start from a different seed ..
-srand(100);
         
         neuralNetB = constructNeuralNetwork(k, n, l); 
 
 
-//srand(time(NULL)+rank);
+        srand(time(NULL) + 10*(rank));
 
 
 
@@ -99,7 +98,6 @@ srand(100);
    
    // need to fix random number generator
         
-    srand(time(NULL)+rank+i);
 
     neuralNetC[i] = constructNeuralNetwork(k,n,l); 
   
@@ -109,8 +107,7 @@ srand(100);
  
 
     MPI_Barrier(MPI_COMM_WORLD);
-
-    sleep(rank*0.5);
+    sleep(0.5*rank);
    
     printf("\n==============BEFORE PROTOCOL RUN=====================RANK[%d]===\n",rank);      
 
@@ -141,7 +138,7 @@ srand(100);
     
     }
      
-   
+    MPI_Barrier(MPI_COMM_WORLD);
      
      double success_count = 0;
 
@@ -155,8 +152,8 @@ srand(100);
 
      int epoch = 0;
    
-     srand(time(NULL));
-// each mpiprocess has the same seed for the round inputs 
+
+    // each mpiprocess has the same seed for the round inputs 
 
      struct NeuralNetwork AbeforeAttack = cloneNeuralNetwork(k,n, neuralNetA);
      struct NeuralNetwork BbeforeAttack = cloneNeuralNetwork(k,n, neuralNetB);
@@ -212,20 +209,27 @@ srand(100);
     } else {
        
        printf("\n==============After PROTOCOL RUN A fail=====================RANK[%d]===\n",rank);       
+       fflush(stdout);
 
         printNetworkWeights(AbeforeAttack, k, n);
-            
+                   fflush(stdout);
+
         printf("\n==============After PROTOCOL RUN B fail=====================RANK[%d]===\n",rank);       
+       fflush(stdout);
 
         printNetworkWeights(BbeforeAttack, k, n);
-            
+                   fflush(stdout);
+
             
         printf("\n==============After PROTOCOL RUN C fail  attacl[%d]=====================RANK[%d]===\n",i,rank);       
+       fflush(stdout);
 
         printNetworkWeights(neuralNetC[i], k, n);
+       fflush(stdout);
 
         printf("Networks are unsynchronised after %d epochs.", EPOCH_LIMIT);
-       
+              fflush(stdout);
+
 
     }
     MPI_Barrier(MPI_COMM_WORLD);
@@ -240,11 +244,11 @@ srand(100);
    
      MPI_Reduce(&success_count,&global_count,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD ) ;
    
-       
+      MPI_Barrier(MPI_COMM_WORLD) ;
        if (rank==0)
        {
            
-       printf("The Success rate  =  [%lf]\n", 100.*global_count/(double)(nAttackers*comm_sz));
+       printf("%d ,  %d  , %d  , %d  , [ %lf ] \n", n,k,l,nAttackers*comm_sz,100.*global_count/(double)(nAttackers*comm_sz));
        fflush(stdout);
 
      }

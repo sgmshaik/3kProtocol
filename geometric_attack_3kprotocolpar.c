@@ -86,10 +86,10 @@ nAttackers = atoi(argv[4]);
         int** inputs = getRandomInputs(k, n);
 
 
-// start from a different seed ..
         
         neuralNetB = constructNeuralNetwork(k, n, l); 
 
+// start from a different seed for each attacker at new rank.. 
 
         srand(time(NULL) + 10*(rank));
 
@@ -262,7 +262,7 @@ nAttackers = atoi(argv[4]);
    
      MPI_Reduce(&success_count,&global_count,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD ) ;
    
-      MPI_Barrier(MPI_COMM_WORLD) ;
+     // MPI_Barrier(MPI_COMM_WORLD) ;
        if (rank==0)
        {
            

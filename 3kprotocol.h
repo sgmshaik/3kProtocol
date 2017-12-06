@@ -48,6 +48,7 @@ int* getHiddenLayerOutputs(struct NeuralNetwork, int**, int, int);
 int getNetworkOutput(struct NeuralNetwork, int**, int, int);
 
 void freeMemoryForNetwork(struct NeuralNetwork, int, int);
+void freeinputs(int**,int);
 
 int** binaryToHLOutputs(int, int);
 int* binaryCombinations(int, int);
@@ -91,7 +92,7 @@ bool runKKKProtocol(struct NeuralNetwork neuralNetA, struct NeuralNetwork neural
             s = 0;
         }
 
-        free(inputs);
+        freeinputs(inputs,k);
         inputs = getRandomInputs(k, n);
 
         epoch = epoch + 1;
@@ -104,6 +105,19 @@ bool runKKKProtocol(struct NeuralNetwork neuralNetA, struct NeuralNetwork neural
 
 }
 
+
+//previous free(inputs) was wrong 
+//I noticed that when there is no sync and epochlimit is high there would be a mem overflow
+void freeinputs(int **inputs,int k)
+{
+
+
+  for (int i = 0; i < k; i++) {
+            free(inputs[i]);
+    }
+    free(inputs);
+    
+}
 
 /**
  * Simulates the geometric attack on the 3k protocol
@@ -165,7 +179,7 @@ bool runGeometricAttackKKKProtocol(struct NeuralNetwork neuralNetA, struct Neura
             s = 0;
         }
         //Prepare for next round.
-        free(inputs);
+        freeinputs(inputs,k);
         
         //Get new random inputs for the next round.
         inputs = getRandomInputs(k, n);
@@ -245,6 +259,56 @@ struct NeuralNetwork cloneNeuralNetwork(int k, int n, struct NeuralNetwork neura
     return neuralNetwork;
 
 }
+
+
+/**
+ * Copy a neural network using the one we supply, maintaining the structure and parameters of the supplied neural network.
+ * @param k The number of perceptrons in the network to be copied.
+ * @param n The number of inputs per perceptron in the network to be copied.
+ * @param neuralNet The network to be cloned.
+ * @return The copy of the supplied network.
+ */
+//pass by reference to copy values and also more efficient than passing by value .
+
+void copyNeuralNetwork(int k, int n, struct NeuralNetwork *neuralNet, struct NeuralNetwork *neuralNet1) {
+    //Initialise the weights
+    for (int i = 0; i < k; i++) {
+        for (int j = 0; j < n; j++) {
+            neuralNet1->weights[i][j] = neuralNet->weights[i][j];
+        }
+    }
+
+    //Initialise the hidden layer outputs
+    for (int i = 0; i < k; i++) {
+        neuralNet1->hiddenLayerOutputs[i] = neuralNet->hiddenLayerOutputs[i];
+    }
+}
+
+
+
+   /**
+ * Constructs an empty neural network
+ * @param k
+ * @param n
+ * @param l
+ * @return the newly constructed neural network.
+ */
+struct NeuralNetwork emptyNeuralNetwork(int k, int n, int l) {
+    struct NeuralNetwork neuralNetwork;
+    // Allocate memory block for the neural network weights;
+    neuralNetwork.weights = malloc(sizeof (int*) * (k));
+
+    for (int i = 0; i < k; i++) {
+        neuralNetwork.weights[i] = malloc(sizeof (int) * n);
+    }
+
+    //Allocate memory blocks for the hidden layer outputs.
+    neuralNetwork.hiddenLayerOutputs = malloc(sizeof (int) * k);
+
+    return neuralNetwork;
+}
+
+
 
 /**
  * Gets the neuron/perceptron whose sum of product of inputs and weights is the minimum, of all the perceptrons in the network.

@@ -10,7 +10,7 @@ do
 		do
 			for((na= 1;na< 3;na++))
 			do
-				mpiexec -n 4 ./par1.out $k $n $l $na
+				mpirun -np 4 ./par1.out $k $n $l $na
 			done
 		done
 	done

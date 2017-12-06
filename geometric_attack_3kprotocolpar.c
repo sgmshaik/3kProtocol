@@ -14,8 +14,8 @@
 #include <mpi.h>
 #include<time.h>
 #include<unistd.h>
-#define EPOCH_LIMIT 10000000
-#define SYNCHRONISATION_THRESHOLD 50
+#define EPOCH_LIMIT 2000000
+#define SYNCHRONISATION_THRESHOLD 25
 
 
 
@@ -36,13 +36,13 @@ int main() {
 
       // create new seed for different networks 
     
-    int k = 0;
-    int n = 0;
-    int l = 0;
-    int nAttackers=0;
+  //  int k = 0;
+   // int n = 0;
+    //int l = 0;
+    //int nAttackers=0;
  
   
-  if(rank==0)
+ /* if(rank==0)
     {
 fflush(stdout);
     printf("Enter the value of k:");
@@ -59,15 +59,25 @@ fflush(stdout);
     printf("Enter number of Attackers Per Node:");
     fflush(stdout);
     scanf("%d",&nAttackers); 
-	}
+	}*/
 
 
+for(int k = 1 ; k<8; k++)
+{
+    for(int n = 1; n<8; n++)
+        {
+            for(int l = 1; l<8; l++)
+            {
+
+                for(int nAttackers = 1; nAttackers<8;nAttackers++)
+                {
+        
     //   broadcast the inputs to create attackers and A,B 
     
-    MPI_Bcast(&n,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&k,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&l,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&nAttackers,1,MPI_INT,0,MPI_COMM_WORLD);
+   // MPI_Bcast(&n,1,MPI_INT,0,MPI_COMM_WORLD);
+    //MPI_Bcast(&k,1,MPI_INT,0,MPI_COMM_WORLD);
+    //MPI_Bcast(&l,1,MPI_INT,0,MPI_COMM_WORLD);
+    //MPI_Bcast(&nAttackers,1,MPI_INT,0,MPI_COMM_WORLD);
  
    struct NeuralNetwork* neuralNetC = malloc((sizeof(struct NeuralNetwork))*nAttackers); 
  
@@ -106,9 +116,9 @@ fflush(stdout);
 
  
 
-    MPI_Barrier(MPI_COMM_WORLD);
-    sleep(0.5*rank);
-   
+   // MPI_Barrier(MPI_COMM_WORLD);
+  //  sleep(0.5*rank);
+  /* 
     printf("\n==============BEFORE PROTOCOL RUN=====================RANK[%d]===\n",rank);      
 
     printf("\n==============BEFORE PROTOCOL RUN A=====================RANK[%d]===\n",rank);      
@@ -136,7 +146,7 @@ fflush(stdout);
 
     printf("\n========================Attacker%d===========Rank%d\n",i,rank);
     
-    }
+    }*/
      
     MPI_Barrier(MPI_COMM_WORLD);
      
@@ -157,6 +167,7 @@ fflush(stdout);
 
      struct NeuralNetwork AbeforeAttack = cloneNeuralNetwork(k,n, neuralNetA);
      struct NeuralNetwork BbeforeAttack = cloneNeuralNetwork(k,n, neuralNetB);
+    //printf("  the rank %d",rank);
      bool status = runGeometricAttackKKKProtocol(AbeforeAttack, BbeforeAttack, neuralNetC[i], inputs, k, n, l, SYNCHRONISATION_THRESHOLD, EPOCH_LIMIT, &epoch);
   
   
@@ -167,43 +178,56 @@ fflush(stdout);
     if (status == true)
     {
         success_count = success_count +1.0;
-        printf("local success [%lf ]    rank [ %d] \n", success_count, rank);
+       // printf("local success [%lf ]    rank [ %d] \n", success_count, rank);
+        
     }
      
      
-    printf("\n==============AFTER PROTOCOL RUN====================RANK[%d]===\n",rank);
+    //printf("\n==============AFTER PROTOCOL RUN====================RANK[%d]===\n",rank);
     
-    if (status == true) {
+   /* if (status == true) {
         
         printf("The networks are now synchronised after %d epochs!\n", epoch);
-        
+               fflush(stdout);
+
           printf("\n==============After PROTOCOL RUN A=====================RANK[%d]===\n",rank);       
 
+               fflush(stdout);
+
         printNetworkWeights(AbeforeAttack, k, n);
-        
+               fflush(stdout);
+
         printf("\n=====================================\n");
+       fflush(stdout);
         
         printf("\n==============After PROTOCOL RUN B=====================RANK[%d]===\n",rank);       
+       fflush(stdout);
 
         printNetworkWeights(BbeforeAttack, k, n);
+       fflush(stdout);
         
         printf("\n=====================================\n");
+       fflush(stdout);
         
               
             
     printf("\n========================Attacker%d AFTER Run===========Rank%d\n",i,rank);
+       fflush(stdout);
             
 
         printNetworkWeights(neuralNetC[i], k, n);
+       fflush(stdout);
                
 
     printf("\n========================Attacker%d===========Rank%d\n",i,rank);
+       fflush(stdout);
 
         
 
         
 
         printf("\n=====================================\n");
+       fflush(stdout);
           
 
     } else {
@@ -227,12 +251,12 @@ fflush(stdout);
         printNetworkWeights(neuralNetC[i], k, n);
        fflush(stdout);
 
-        printf("Networks are unsynchronised after %d epochs.", EPOCH_LIMIT);
+        printf("Attack Failed after %d epochs.", EPOCH_LIMIT);
               fflush(stdout);
 
 
-    }
-    MPI_Barrier(MPI_COMM_WORLD);
+    }*/
+   // MPI_Barrier(MPI_COMM_WORLD);
      
     freeMemoryForNetwork(AbeforeAttack,k,n);
     freeMemoryForNetwork(BbeforeAttack,k,n);
@@ -248,7 +272,7 @@ fflush(stdout);
        if (rank==0)
        {
            
-       printf("%d ,  %d  , %d  , %d  , [ %lf ] \n", n,k,l,nAttackers*comm_sz,100.*global_count/(double)(nAttackers*comm_sz));
+       printf("%d ,  %d  , %d  , %d  ,  %lf  \n", k, n, l,nAttackers*comm_sz,100.*global_count/(double)(nAttackers*comm_sz));
        fflush(stdout);
 
      }
@@ -264,10 +288,10 @@ fflush(stdout);
     
     free(inputs);
 
-
-    
-    
-
+                }
+            }
+        }
+}
 
 MPI_Finalize();
 

@@ -144,6 +144,7 @@ bool runGeometricAttackKKKProtocol(struct NeuralNetwork neuralNetA, struct Neura
             
         } else if ((outputA == outputB) && (outputA != outputC)) {
             //Reset the synchronisation count - there was no synchronisation or sychronisation broke down in the round.
+            
             s = s+1;
             
             // Get the hidden neuron in C (attackerNet) for which the sum of its weights * inputs is minimised.
@@ -168,6 +169,8 @@ bool runGeometricAttackKKKProtocol(struct NeuralNetwork neuralNetA, struct Neura
         
         //Get new random inputs for the next round.
         inputs = getRandomInputs(k, n);
+        //MPI_Barrier(MPI_COMM_WORLD);
+
 
         //Increment the round count. We will not run the protocol for ever - we will stop after a predefined number of rounds if 
         //synchronisation has not been reached by then.
@@ -178,21 +181,8 @@ bool runGeometricAttackKKKProtocol(struct NeuralNetwork neuralNetA, struct Neura
     *epochFinal = epoch;
     
     //Did the above while loop stop because the synchronisation threshold was reached?
-   bool attackout= true;
-   for(int i = 0; i < k ; i++ )
-   {
-       for(int j = 0; j<n; j++)
-       {
-           if(neuralNetA.weights[i][j]!=attackerNet.weights[i][j] )
-           {
-           attackout = false;
-           break;
-           }
-       }
-       if(attackout==false)
-       break;
-   }
-    if (s == syncThreshold && attackout==true ) {
+  
+    if (s == syncThreshold ) {
         return true;  // We have succesfully synchronised the network. The weights were the same for syncThreshold number of rounds!
     } 
     
@@ -200,101 +190,7 @@ bool runGeometricAttackKKKProtocol(struct NeuralNetwork neuralNetA, struct Neura
 }
 
 
-/**
- * Simulates the genetic attack on the 3k protocol. After the simulation the network weights for both network can be printed to show they are
- * synchronised. Use the utility function printNetworkWeights(...) in this library to print the network weights of network A and network B and attacker network.
- * 
- * @param neuralNetA - neuralNetA and neuralNetB are the normal communicating pair by which we wish to generate a common key.
- * @param neuralNetB
- * @param attackerNet - or neuralNetC which is for the attacker.
- * @param inputs - the kth 'row' of the 'two-dimensional' array contains the inputs to the kth neuron.
- * @param k - identifies the number of hidden neurons.
- * @param n - identifies the n of inputs into each hidden neurons. The total number of inputs to the network is therefore N = k*n.
- * @param l - is the bound (-l to l) on the range of values that can be assigned to the weights. It is proposed that the bigger the l, the more
- *            difficult it is to break the protocol.
- * @param syncThreshold - if the all the involved networks produce the same weights in 'syncThreshold' successive rounds,
- *                         then we take it that the synchronisation is now stable and we can take the weights as final. For the genetic attack,
- *                         this value would typically be a small positive integer. Since we count a synchronisation as when all the networks in each 
- *                         population have the same weights, a 'syncThreshold' of 1 would resemble a geometric attack setting, in the sense that the
- *                         the multiple populations will be comparable to the multiple successive synchronised rounds that we have in a geometric attack setting.
- * @param epochLimit  - in case the networks are taking too long to reach synchronisation stability, we set this limit on the number of rounds that 
- *                  can be executed so that we don't run the simulation for ever. This limit will depend on the resources available to your simulation 
- *                  environment.
- * @param epochFinal - int pointer passed from the calling context to collect the final epoch reached.
- * @return true or false indicating whether synchronisation was reached or not. Synchronisation is reached when the attack succeeds i.e the attacker succeeds in synchronising its 
- *          network weights with that of network A and network B.
- */
-bool runGeneticAttackKKKProtocol(struct NeuralNetwork neuralNetA, struct NeuralNetwork neuralNetB, struct NeuralNetwork* attackerNets, int** inputs, int k, int n, int l, int m, int syncThreshold, int epochLimit, int* epochFinal) {
-    int s = 0;
-    int epoch = 0;
-    
-    while ((s < syncThreshold) && (epoch < epochLimit)) {
-        int outputA = getNetworkOutput(neuralNetA, inputs, k, n);
-        int outputB = getNetworkOutput(neuralNetB, inputs, k, n);
-
-        if ((outputA == outputB) && (sizeof (attackerNets) <= m)) {
-            struct NeuralNetwork* newAttackerNets = malloc(sizeof (struct NeuralNetwork*) * sizeof (attackerNets) * pow(2, k - 1));
-            int index = 0;
-            //Get all the combinations that give us the outputA (or outputB).
-            int** hlOutputs = binaryToHLOutputs(k, outputA);
-            struct NeuralNetwork nn;
-            for (int i = 0; i < sizeof (attackerNets); i++) {
-                for (int j = 0; j < sizeof (hlOutputs); j++) {
-                    //Clone attackerNet[i]
-                    nn = cloneNeuralNetwork(k, n, attackerNets[i]);
-                    //Update the weights of the new clone using given hidden layer outputs
-                    updateWeightsGivenHLOutputs(nn, inputs, k, n, l, hlOutputs[j]);
-                    //Add the new clone to newAttackerNets					
-                    newAttackerNets[index] = nn;
-                    index++;
-                }
-            }
-            //Update original attackerNets
-            free(attackerNets);
-            attackerNets = newAttackerNets;
-            //Free memory for the temporary attacker network
-            freeMemoryForNetwork(nn, k, n);
-
-        } else if ((outputA == outputB) && (sizeof (attackerNets) > m)) {
-            //Delete all the networks in the population whose outputs don't agree with that of  A and B; update the weights of the rest
-            struct NeuralNetwork* newAttackerNets = malloc(sizeof (struct NeuralNetwork*) * m);
-            int index = 0;
-            for (int i = 0; i < sizeof (attackerNets); i++) {
-                if (index >= m) break; //Caps the pool at m.
-                if (outputA = getNetworkOutput(attackerNets[i], inputs, k, n)) {
-                    //Update the weights as usual
-                    updateWeights(attackerNets[i], inputs, k, n, l);
-                    newAttackerNets[index] = attackerNets[i];
-                    index++;
-                }
-            }
-            if (index == m) {
-                s++; //count the number of times we have all networks in the pool having the same output as A and B.
-            }
-            //Update original attackerNets
-            free(attackerNets);
-            attackerNets = newAttackerNets;
-
-        } else {
-            s = 0;
-        }
-        free(inputs);
-        inputs = getRandomInputs(k, n);
-
-        epoch = epoch + 1;
-    }
-    
-    // Set the final epoch for use by the calling context.
-    *epochFinal = epoch;
-
-    //Did the simulation end due to reach of synchronisation threshold?
-    if (s == syncThreshold) {  
-        return true;
-    }
-    return false;
-}
-
-/**
+   /**
  * Constructs a new two layered neural network with k perceptrons, n inputs per perceptron and weight across each input generated randomly 
  * from the range -l to l.
  * @param k

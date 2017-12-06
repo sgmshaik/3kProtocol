@@ -20,9 +20,8 @@
 
 
 
-int main() {
-    
-
+int main(int argc, char *argv[])    
+{
     MPI_Init(NULL,NULL);
 
 
@@ -36,16 +35,16 @@ int main() {
 
       // create new seed for different networks 
     
-  //  int k = 0;
-   // int n = 0;
-    //int l = 0;
-    //int nAttackers=0;
+    int k = 0;
+    int n = 0;
+    int l = 0;
+    int nAttackers=0;
  
   
- /* if(rank==0)
+ if(rank==0)
     {
-fflush(stdout);
-    printf("Enter the value of k:");
+//fflush(stdout);
+   /* printf("Enter the value of k:");
    fflush(stdout);
    scanf("%d", &k);
     printf("Enter the value of n:");
@@ -59,25 +58,20 @@ fflush(stdout);
     printf("Enter number of Attackers Per Node:");
     fflush(stdout);
     scanf("%d",&nAttackers); 
-	}*/
+	*/
+k = atoi(argv[1]);
+n = atoi(argv[2]);
+l = atoi(argv[3]);
+nAttackers = atoi(argv[4]);
+    }
 
-
-for(int k = 1 ; k<8; k++)
-{
-    for(int n = 1; n<8; n++)
-        {
-            for(int l = 1; l<8; l++)
-            {
-
-                for(int nAttackers = 1; nAttackers<8;nAttackers++)
-                {
         
     //   broadcast the inputs to create attackers and A,B 
     
-   // MPI_Bcast(&n,1,MPI_INT,0,MPI_COMM_WORLD);
-    //MPI_Bcast(&k,1,MPI_INT,0,MPI_COMM_WORLD);
-    //MPI_Bcast(&l,1,MPI_INT,0,MPI_COMM_WORLD);
-    //MPI_Bcast(&nAttackers,1,MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&n,1,MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&k,1,MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&l,1,MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&nAttackers,1,MPI_INT,0,MPI_COMM_WORLD);
  
    struct NeuralNetwork* neuralNetC = malloc((sizeof(struct NeuralNetwork))*nAttackers); 
  
@@ -288,10 +282,10 @@ for(int k = 1 ; k<8; k++)
     
     free(inputs);
 
-                }
-            }
-        }
-}
+                
+            
+        
+
 
 MPI_Finalize();
 

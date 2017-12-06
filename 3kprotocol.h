@@ -145,7 +145,7 @@ bool runGeometricAttackKKKProtocol(struct NeuralNetwork neuralNetA, struct Neura
         } else if ((outputA == outputB) && (outputA != outputC)) {
             //Reset the synchronisation count - there was no synchronisation or sychronisation broke down in the round.
             
-            s = s+1;
+            s = 0;
             
             // Get the hidden neuron in C (attackerNet) for which the sum of its weights * inputs is minimised.
             int kthHidden = getMinInputSumNeuron(attackerNet, inputs, k, n);

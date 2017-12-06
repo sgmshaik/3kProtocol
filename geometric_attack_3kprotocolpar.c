@@ -90,8 +90,8 @@ nAttackers = atoi(argv[4]);
         neuralNetB = constructNeuralNetwork(k, n, l); 
 
 // start from a different seed for each attacker at new rank.. 
-
-        srand(time(NULL) + 10*(rank));
+//shifted by 100*rank to shift the seed for in case time 
+        srand((unsigned)time(NULL) + 100*(rank));
 
 
 
@@ -142,26 +142,51 @@ nAttackers = atoi(argv[4]);
     
     }*/
      
-    MPI_Barrier(MPI_COMM_WORLD);
+    //MPI_Barrier(MPI_COMM_WORLD);
      
      double success_count = 0;
 
      
-
+     int **tempInputs = malloc(sizeof (int*) * k);
+;    
+     for (int i = 0; i < k; i++) {
+      tempInputs[i] = malloc(sizeof (int) * n);
+        for (int j = 0; j < n; j++) {
+            tempInputs[i][j] = inputs[i][j];
+        }
+    }
      for(int i = 0; i<nAttackers; i++)
      {
     
-    
+     
     // need to check bool condition for each attacker once one attacker successful then stop .
 
      int epoch = 0;
    
 
     // each mpiprocess has the same seed for the round inputs 
-
      struct NeuralNetwork AbeforeAttack = cloneNeuralNetwork(k,n, neuralNetA);
      struct NeuralNetwork BbeforeAttack = cloneNeuralNetwork(k,n, neuralNetB);
     //printf("  the rank %d",rank);
+         for (int i = 0; i < k; i++) {
+        for (int j = 0; j < n; j++) {
+            inputs[i][j] = tempInputs[i][j];
+        }
+    }
+     //printNetworkWeights(AbeforeAttack, k, n);
+     
+/*if(rank == 1){
+   //    printf(" attacker %d , rank %d \n " , i, rank );
+       fflush(stdout);
+       for (int ih = 0; ih < k; ih++) {
+        for (int jh = 0; jh < n; jh++) {
+       //     printf("%d ",inputs[ih][jh]);
+            fflush(stdout);
+        }
+          printf("\n");
+          
+       }
+}*/    
      bool status = runGeometricAttackKKKProtocol(AbeforeAttack, BbeforeAttack, neuralNetC[i], inputs, k, n, l, SYNCHRONISATION_THRESHOLD, EPOCH_LIMIT, &epoch);
   
   
@@ -266,7 +291,7 @@ nAttackers = atoi(argv[4]);
        if (rank==0)
        {
            
-       printf("%d ,  %d  , %d  , %d  ,  %lf  \n", k, n, l,nAttackers*comm_sz,100.*global_count/(double)(nAttackers*comm_sz));
+       printf("%d ,  %d  , %d  , %d  ,  %lf , %lf \n", k, n, l,nAttackers*comm_sz,100.*global_count/(double)(nAttackers*comm_sz), global_count);
        fflush(stdout);
 
      }
@@ -281,7 +306,7 @@ nAttackers = atoi(argv[4]);
     } 
     
     free(inputs);
-
+    free(tempInputs);
                 
             
         

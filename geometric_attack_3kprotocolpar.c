@@ -35,14 +35,17 @@ int main(int argc, char *argv[])
     int k = 0;
     int n = 0;
     int l = 0;
+    
+
+    
     // This is number of Attacker on each rank
     int nAttackers = 0;
    //set to 1 is if you want to enter the inputs your self
     int userinput = 1;
    //set @networkprint to 1 and @rankprint to the desired rank you want to see the weights for 
    //usefull for testing 
-    int networkprint = 1; 
-    int rankprint = 1;
+    int networkprint = 0; 
+    int rankprint = 0;
     
     //setup on rank 0 since only rank0 has access to stdin 
 
@@ -59,14 +62,20 @@ int main(int argc, char *argv[])
             printf("Enter the value of n:");
             fflush(stdout);
             scanf("%d", &n);
-            fflush(stdout);
-
             printf("Enter the value of l:");
             fflush(stdout);
             scanf("%d", &l);
             printf("Enter number of Attackers Per Node:");
             fflush(stdout);
             scanf("%d", &nAttackers);
+            printf("Do you want to print network weights enter 0 for no 1 for yes:");
+            fflush(stdout);
+            scanf("%d", &networkprint);
+           printf("Which ranks weight do you want to print enter an integer 0-(comm_sz-1):");
+            fflush(stdout);
+            scanf("%d",&rankprint);
+            fflush(stdout);
+      
         }
         else
         {
@@ -84,6 +93,8 @@ int main(int argc, char *argv[])
     MPI_Bcast(&k, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(&l, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(&nAttackers, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&rankprint, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&networkprint, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
     struct NeuralNetwork *neuralNetC = malloc((sizeof(struct NeuralNetwork)) * nAttackers);
 
@@ -182,6 +193,8 @@ int main(int argc, char *argv[])
             }
         }
 
+        copyNeuralNetwork(k, n,  &neuralNetA, &AbeforeAttack); 
+        copyNeuralNetwork(k, n, &neuralNetB, &BbeforeAttack); 
 
 
 
@@ -259,8 +272,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        copyNeuralNetwork(k, n,  &neuralNetA, &AbeforeAttack); 
-        copyNeuralNetwork(k, n, &neuralNetB, &BbeforeAttack); 
+        
 
         
         //set count the epochtotal for each rank

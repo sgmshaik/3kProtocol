@@ -5,7 +5,7 @@
  * 2. Simulation of geometric and genetic security attacks on the protocol.
  * 
  * Author: Maduka Attamah
- * 
+ * Author: Mousa Shaikh-Soltan [fixed memory issues]
  * Copyright 2016-2017 Maduka Attamah
  */
 

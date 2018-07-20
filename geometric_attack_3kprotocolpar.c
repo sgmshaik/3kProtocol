@@ -7,8 +7,6 @@
  * Copyright 2016 Maduka Attamah
  * Copyright 2017 Mousa Shaikh-Soltan
  *
- *  This code was auto formated using visual studio code to be neater for your pleasure :), 
- *  I wish I had auto formated the previous assignments
  */
 
 //tasks i need to stop a single attacker is successfull

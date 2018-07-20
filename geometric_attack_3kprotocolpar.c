@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     int n = 0;
     int l = 0;
     
-
+ 
     
     // This is number of Attacker on each rank
     int nAttackers = 0;
